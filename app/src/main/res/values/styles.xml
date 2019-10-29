@@ -11,4 +11,9 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="TFCameraTheme" parent="AppTheme.NoActionBar">
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="elevation">0dp</item>
+    </style>
+
 </resources>

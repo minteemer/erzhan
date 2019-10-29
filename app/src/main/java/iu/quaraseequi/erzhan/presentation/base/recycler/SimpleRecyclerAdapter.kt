@@ -8,10 +8,10 @@ import androidx.recyclerview.widget.RecyclerView
 
 
 open class SimpleRecyclerAdapter<I>(
-        @LayoutRes private val itemLayout: Int,
-        defaultItems: List<I> = emptyList(),
-        var onItemClicked: ((item: I) -> Unit)? = null,
-        private val attachView: (view: View, item: I) -> Unit
+    @LayoutRes private val itemLayout: Int,
+    defaultItems: List<I> = emptyList(),
+    var onItemClicked: ((item: I) -> Unit)? = null,
+    private val attachView: (view: View, item: I) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     val itemsList = ArrayList<I>(defaultItems)
@@ -30,9 +30,9 @@ open class SimpleRecyclerAdapter<I>(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            LayoutInflater.from(parent.context)
-                    .inflate(itemLayout, parent, false)
-                    .let { ViewHolder(it) }
+        LayoutInflater.from(parent.context)
+            .inflate(itemLayout, parent, false)
+            .let { ViewHolder(it) }
 
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {

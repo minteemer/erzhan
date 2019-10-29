@@ -40,7 +40,8 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:layout_alignParentTop="true"
-            android:background="@color/semi_transparent">
+            android:background="@color/semi_transparent"
+            android:visibility="gone">
 
             <ImageView
                 android:layout_width="wrap_content"
@@ -48,9 +49,21 @@
                 android:src="@drawable/tfl2_logo" />
         </androidx.appcompat.widget.Toolbar>
 
+        <ImageView
+            android:id="@+id/iv_take_photo_btn"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="15dp"
+            android:src="@drawable/ic_camera_black"
+            android:tint="@color/colorAccent" />
+
     </RelativeLayout>
 
     <include
         android:id="@+id/bottom_sheet_layout"
-        layout="@layout/layout_bottom_sheet" />
+        layout="@layout/layout_bottom_sheet"
+        android:visibility="gone" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
