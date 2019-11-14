@@ -8,7 +8,6 @@ import iu.quaraseequi.erzhan.tf.env.ImageUtils
 import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.core.Rect
-import org.opencv.imgproc.Imgproc
 
 fun Image.YUItoRGBBitmap(): Bitmap {
     val planes = planes
