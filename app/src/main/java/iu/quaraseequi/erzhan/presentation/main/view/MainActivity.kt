@@ -10,7 +10,6 @@ import com.bumptech.glide.Glide
 import com.warefly.checkscan.presentation.base.view.recycler.SimpleRecyclerAdapter
 import iu.quaraseequi.erzhan.R
 import iu.quaraseequi.erzhan.domain.entities.images.TargetImage
-import iu.quaraseequi.erzhan.presentation.camera.view.CameraActivity
 import iu.quaraseequi.erzhan.presentation.main.presenter.MainScreenPresenter
 import iu.quaraseequi.erzhan.presentation.main.presenter.MainScreenView
 import iu.quaraseequi.erzhan.tf.DetectorActivity

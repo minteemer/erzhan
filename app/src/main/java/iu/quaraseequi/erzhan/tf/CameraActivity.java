@@ -60,6 +60,7 @@ import java.nio.ByteBuffer;
 
 import iu.quaraseequi.erzhan.R;
 import iu.quaraseequi.erzhan.data.storage.ImageStorage;
+import iu.quaraseequi.erzhan.repositories.objectDetection.ObjectDetectionRepository;
 import iu.quaraseequi.erzhan.tf.env.ImageUtils;
 import iu.quaraseequi.erzhan.tf.env.Logger;
 
@@ -271,6 +272,9 @@ public abstract class CameraActivity extends AppCompatActivity
                     takePhoto = false;
                     Log.d("Camera", "Frame format: " + image.getFormat());
 
+
+                    KoinJavaComponent.get(ObjectDetectionRepository.class)
+                            .detectObjects(image);
                     KoinJavaComponent.get(ImageStorage.class)
                             .saveImage(image, System.currentTimeMillis() + ".jpg");
                     finish();

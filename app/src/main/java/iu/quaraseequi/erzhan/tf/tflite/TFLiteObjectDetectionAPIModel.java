@@ -56,7 +56,7 @@ public class TFLiteObjectDetectionAPIModel implements Classifier {
   private static final int NUM_THREADS = 4;
   private boolean isModelQuantized;
   // Config values.
-  private int inputSize;
+  int inputSize;
   // Pre-allocated buffers.
   private Vector<String> labels = new Vector<String>();
   private int[] intValues;
