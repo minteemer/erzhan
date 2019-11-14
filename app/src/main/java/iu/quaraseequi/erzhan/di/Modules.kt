@@ -21,7 +21,7 @@ val appModule = module {
     single<ObjectDetectionRepository> { ObjectDetectionRepositoryImpl(get()) }
 
     /** Interactors */
-    single { ImagesInteractor(get()) }
+    single { ImagesInteractor(get(), get()) }
 
     /** TF Models */
     single {

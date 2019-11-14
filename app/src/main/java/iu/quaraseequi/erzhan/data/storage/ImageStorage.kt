@@ -22,7 +22,7 @@ class ImageStorage(
         private const val ALBUM_NAME = "saved_target_photos"
     }
 
-    private val albumDir = File(
+    val albumDir = File(
         context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
             ?: throw IllegalStateException("External files dir does not exist"),
         ALBUM_NAME
@@ -34,12 +34,8 @@ class ImageStorage(
      * @param file File where image is going to be written
      * @return File object pointing to the file URI, null if the file already exists
      */
-    fun saveImage(image: Image, imageName: String): File? {
+    fun saveImage(image: Image, imageName: String): File {
         val file = File(albumDir, imageName)
-        if (file.exists()) {
-            image.close()
-            return null
-        }
 
         val bytes = NV21toJPEG(YUV420toNV21(image), image.width, image.height, 100)
         val output = FileOutputStream(file)
