@@ -34,7 +34,14 @@ class MainScreenPresenter(
     }
 
     fun onRemoveImageClicked(image: TargetImage) {
-        // TODO: implement image removal
+        imagesInteractor.removeImage(image.id)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { onRefreshImages() },
+                { it.log(LOG_TAG, "Error while removing image") }
+            )
+            .disposeOnTermination()
     }
 
 }

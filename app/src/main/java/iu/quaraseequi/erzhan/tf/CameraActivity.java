@@ -274,7 +274,8 @@ public abstract class CameraActivity extends AppCompatActivity
                     Log.d("Camera", "Frame format: " + image.getFormat());
 
                     KoinJavaComponent.get(ImagesInteractor.class)
-                            .saveImage(image);
+                            .saveImage(image)
+                            .blockingAwait();
                     finish();
                     return;
                 }

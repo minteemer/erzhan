@@ -2,10 +2,15 @@ package iu.quaraseequi.erzhan.data
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.RectF
 import android.media.Image
 import iu.quaraseequi.erzhan.tf.env.ImageUtils
+import org.opencv.android.Utils
+import org.opencv.core.Mat
+import org.opencv.core.Rect
+import org.opencv.imgproc.Imgproc
 
-fun Image.toYUItoRGBBitmap(): Bitmap {
+fun Image.YUItoRGBBitmap(): Bitmap {
     val planes = planes
 
     val yuvBytes = arrayOfNulls<ByteArray>(3)
@@ -45,6 +50,20 @@ fun Bitmap.cropToSize(cropSize: Int): Bitmap {
     canvas.drawBitmap(this, frameToCropTransform, null)
 
     return croppedBitmap
+}
+
+fun Bitmap.toMat(): Mat =
+    Mat().also {
+        Utils.bitmapToMat(copy(Bitmap.Config.ARGB_8888, true), it)
+    }
+
+fun Mat.cropRect(rect: RectF): Mat {
+    val x = width() * rect.left
+    val y = height() * rect.bottom
+    val width = width() * (1 - rect.right) - x
+    val height = height() * (1 - rect.top) - y
+
+    return submat(Rect(x.toInt(), y.toInt(), width.toInt(), height.toInt()))
 }
 
 
