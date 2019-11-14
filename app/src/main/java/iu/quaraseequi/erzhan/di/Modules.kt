@@ -17,6 +17,6 @@ val appModule = module {
     single<ImageStorageRepository> { ImageStorageRepositoryImpl(get()) }
 
     /** Interactors */
-    single { ImagesInteractor(get()) }
+    single { ImagesInteractor(get(), get()) }
 
 }
