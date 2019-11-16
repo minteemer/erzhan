@@ -33,14 +33,19 @@ class ImagesInteractor(
         val image = rgbBitmap.toMat()
 
         objectDetectionRepository.detectObjects(rgbBitmap).asSequence()
-            .filter { it.confidence > 0.5 }
+            .filter { it.confidence >= 0.5 }
+            .also { recognitions ->
+                recognitions.forEach {
+                    Log.d("Recognition", "${it.title} - ${it.location} (${it.confidence})")
+                }
+            }
             .map { image.cropRect(it.location) }
             .forEachIndexed { i, mat ->
                 val bmp = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888)
                 Utils.matToBitmap(mat, bmp)
                 imageStorageRepository.saveImage(bmp, System.currentTimeMillis())
 
-                Log.d("Features", featureExtractionRepository.getFeatures(mat).toString())
+                val feature = featureExtractionRepository.getFeatures(mat)
             }
     }
 

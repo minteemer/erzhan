@@ -5,17 +5,13 @@ import android.util.Log
 import org.opencv.core.Mat
 import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
-import java.io.IOException
 import java.nio.ByteBuffer
-import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel.MapMode.READ_ONLY
-
-
 
 
 class FeatureExtractionRepositoryImpl(
     private val assetsManager: AssetManager
-) : FeatureExtractionRepository{
+) : FeatureExtractionRepository {
 
     var modelFile = "xorGate.lite"
 
@@ -31,12 +27,11 @@ class FeatureExtractionRepositoryImpl(
     }
 
     override fun getFeatures(image: Mat): DoubleArray {
-
         val inp = arrayOf(floatArrayOf(0f, 0f))
         val out = arrayOf(floatArrayOf(0f))
 
-        tflite.run(inp,out)
-        Log.d("Tflite", out.joinToString{ it.joinToString ()})
+        tflite.run(inp, out)
+        Log.d("Tflite", out.joinToString { it.joinToString() })
 
         return DoubleArray(100) { i -> i.toDouble() }
     }

@@ -1,9 +1,9 @@
 package iu.quaraseequi.erzhan.data
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.RectF
 import android.media.Image
+import android.util.Log
 import iu.quaraseequi.erzhan.tf.env.ImageUtils
 import org.opencv.android.Utils
 import org.opencv.core.Mat
@@ -33,22 +33,8 @@ fun Image.YUItoRGBBitmap(): Bitmap {
 
     rgbFrameBitmap.setPixels(rgbBytes, 0, width, 0, 0, width, height)
 
+    close()
     return rgbFrameBitmap
-}
-
-fun Bitmap.cropToSize(cropSize: Int): Bitmap {
-    val croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888)
-
-    val frameToCropTransform = ImageUtils.getTransformationMatrix(
-        width, height,
-        cropSize, cropSize,
-        0, false
-    )
-
-    val canvas = Canvas(croppedBitmap)
-    canvas.drawBitmap(this, frameToCropTransform, null)
-
-    return croppedBitmap
 }
 
 fun Bitmap.toMat(): Mat =
@@ -57,18 +43,14 @@ fun Bitmap.toMat(): Mat =
     }
 
 fun Mat.cropRect(rect: RectF): Mat {
-    println(rect)
-    println("-------------------------------------------------------------------------------------------------")
-    val x = width() * ((rect.centerX() - rect.width() / 2) / 300)
-    val y = height() * ((rect.centerY() - rect.height() / 2) / 300)
-    val width = width() * (rect.width() / 300)
-    val height = height() * (rect.height() / 300)
-    println(x.toString())
-    println(y.toString())
-    println(width.toString())
-    println(height.toString())
+    val x = (width() * (rect.centerX() - rect.width() / 2))
+    val y = height() * (rect.centerY() - rect.height() / 2)
+    val width = width() * rect.width()
+    val height = height() * rect.height()
 
-    return submat(Rect(x.toInt(), y.toInt(), width.toInt(), height.toInt()))
+    Log.d("Crop", "$rect; x: $x, y: $y, width: $width, height: $height")
+
+    return submat(Rect(x.toInt().coerceAtLeast(0), y.toInt().coerceAtLeast(0), width.toInt(), height.toInt()))
 }
 
 
