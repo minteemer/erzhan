@@ -14,11 +14,10 @@ class ImageStorageRepositoryImpl(
     override fun getSavedImages(): Single<List<TargetImage>> =
         Single.fromCallable {
             imageStorage.getImagePathList()
-                .map {
-                    TargetImage(
-                        File(it).nameWithoutExtension.toLong(),
-                        it
-                    )
+                .mapNotNull {filePath ->
+                    File(filePath).nameWithoutExtension.toLongOrNull()?.let { imgId ->
+                        TargetImage(imgId, filePath)
+                    }
                 }
         }
 

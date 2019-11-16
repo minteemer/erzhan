@@ -60,6 +60,7 @@ import java.nio.ByteBuffer;
 
 import iu.quaraseequi.erzhan.R;
 import iu.quaraseequi.erzhan.data.storage.ImageStorage;
+import iu.quaraseequi.erzhan.domain.entities.logger.ErrorLoggerKt;
 import iu.quaraseequi.erzhan.domain.interactors.images.ImagesInteractor;
 import iu.quaraseequi.erzhan.repositories.objectDetection.ObjectDetectionRepository;
 import iu.quaraseequi.erzhan.tf.env.ImageUtils;
@@ -273,10 +274,15 @@ public abstract class CameraActivity extends AppCompatActivity
                     takePhoto = false;
                     Log.d("Camera", "Frame format: " + image.getFormat());
 
-                    KoinJavaComponent.get(ImagesInteractor.class)
-                            .saveImage(image)
-                            .blockingAwait();
-                    finish();
+                    try {
+                        KoinJavaComponent.get(ImagesInteractor.class)
+                                .saveImage(image)
+                                .blockingAwait();
+                    } catch (Exception e){
+                        ErrorLoggerKt.log(e, "CameraActivity", "Image saving error");
+                    } finally {
+                        finish();
+                    }
                     return;
                 }
             }

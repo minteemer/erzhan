@@ -57,10 +57,16 @@ fun Bitmap.toMat(): Mat =
     }
 
 fun Mat.cropRect(rect: RectF): Mat {
-    val x = width() * rect.left
-    val y = height() * rect.bottom
-    val width = width() * (1 - rect.right) - x
-    val height = height() * (1 - rect.top) - y
+    println(rect)
+    println("-------------------------------------------------------------------------------------------------")
+    val x = width() * ((rect.centerX() - rect.width() / 2) / 300)
+    val y = height() * ((rect.centerY() - rect.height() / 2) / 300)
+    val width = width() * (rect.width() / 300)
+    val height = height() * (rect.height() / 300)
+    println(x.toString())
+    println(y.toString())
+    println(width.toString())
+    println(height.toString())
 
     return submat(Rect(x.toInt(), y.toInt(), width.toInt(), height.toInt()))
 }
