@@ -6,7 +6,6 @@ import io.reactivex.Single
 import iu.quaraseequi.erzhan.data.db.dao.ImagesDao
 import iu.quaraseequi.erzhan.data.db.models.TargetImageModel
 import iu.quaraseequi.erzhan.data.storage.ImageStorage
-import iu.quaraseequi.erzhan.data.toJson
 import iu.quaraseequi.erzhan.domain.entities.images.TargetImage
 
 class ImageStorageRepositoryImpl(
@@ -19,15 +18,10 @@ class ImageStorageRepositoryImpl(
             images.map { it.toEntity() }
         }
 
-    override fun saveImage(image: Bitmap, features: List<DoubleArray>): Completable =
+    override fun saveImage(image: Bitmap, features: List<FloatArray>): Completable =
         imageStorage.saveImage(image, System.currentTimeMillis().toString())
             .flatMap {
-                imagesDao.saveImage(
-                    TargetImageModel(
-                        imagePath = it.absolutePath,
-                        descriptor = features.toJson()
-                    )
-                )
+                imagesDao.saveImage(TargetImageModel(TargetImage(0, it.absolutePath, features)))
             }
             .ignoreElement()
 

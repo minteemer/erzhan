@@ -17,6 +17,8 @@ import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 class ImagesInteractor(
@@ -25,14 +27,42 @@ class ImagesInteractor(
     private val featureExtractionRepository: FeatureExtractionRepository
 ) {
 
+    companion object {
+        private const val DISTANCE_THRESHOLD = 1.25
+    }
+
     fun getSavedImages(): Single<List<TargetImage>> = imageStorageRepository.getSavedImages()
 
 
-    fun saveImage(cameraImage: Image): Completable = Completable.defer {
-        val rgbBitmap = cameraImage.YUItoRGBBitmap().transform(rotate = 90f)
+    fun saveImage(image: Image): Completable = Completable.defer {
+        val rgbBitmap = image.YUItoRGBBitmap().transform(rotate = 90f)
+        val features = extractFeatures(rgbBitmap)
+        imageStorageRepository.saveImage(rgbBitmap, features)
+    }
 
+    fun checkImage(image: Image): Single<Boolean> = Single.defer {
+        val rgbBitmap = image.YUItoRGBBitmap().transform(rotate = 90f)
+        val features = extractFeatures(rgbBitmap)
+
+        imageStorageRepository.getSavedImages()
+            .map { images ->
+                logDistances(features, images)
+
+                images.any { savedImage ->
+                    savedImage.descriptor.any { savedImageFeature ->
+                        features.any {
+                            l2Distance(it, savedImageFeature) < DISTANCE_THRESHOLD
+                        }
+                    }
+                }
+            }
+    }
+
+    fun removeImage(imageId: Long) = imageStorageRepository.removeImage(imageId)
+
+    private fun extractFeatures(rgbBitmap: Bitmap): List<FloatArray> {
         val image = rgbBitmap.toMat()
-        val features = objectDetectionRepository.detectObjects(rgbBitmap).asSequence()
+        return objectDetectionRepository.detectObjects(rgbBitmap).asSequence()
             .filter { it.confidence >= 0.5 }
             .also { recognitions ->
                 recognitions.forEach {
@@ -41,7 +71,7 @@ class ImagesInteractor(
             }
             .map { image.cropRect(it.location) }
             .map { objectMat ->
-                val resizedImage = Mat().also{
+                val resizedImage = Mat().also {
                     Imgproc.resize(objectMat, it, Size(256.0, 256.0))
                 }
                 val bmp = Bitmap.createBitmap(
@@ -54,10 +84,55 @@ class ImagesInteractor(
                 featureExtractionRepository.getFeatures(bmp)
             }
             .toList()
-
-        imageStorageRepository.saveImage(rgbBitmap, features)
     }
 
-    fun removeImage(imageId: Long) = imageStorageRepository.removeImage(imageId)
+    private fun l2Distance(vec1: FloatArray, vec2: FloatArray): Double {
+        assert(vec1.size == vec2.size) { "Vector lengths must be matching" }
 
+        return vec1.indices.asSequence()
+            .map { i ->
+                (vec1[i].toDouble() - vec2[i].toDouble()).pow(2)
+            }
+            .sum()
+            .let { sqrt(it) }
+    }
+
+    fun cosineSimilarity(vec1: FloatArray, vec2: FloatArray): Double {
+        var dotProduct = 0.0
+        var normA = 0.0
+        var normB = 0.0
+        for (i in vec1.indices) {
+            dotProduct += vec1[i] * vec2[i]
+            normA += vec1[i].pow(2.0f)
+            normB += vec2[i].pow(2.0f)
+        }
+        return dotProduct / (sqrt(normA) * sqrt(normB))
+    }
+
+    private fun logDistances(features: List<FloatArray>, images: List<TargetImage>) {
+        if (features.isNotEmpty()){
+            images.forEach { img ->
+                img.descriptor.forEach { imgFeature ->
+                    Log.d(
+                        "FeatureMatching",
+                        "${img.id} L2: ${features.map {
+                            l2Distance(
+                                it,
+                                imgFeature
+                            )
+                        }.joinToString()}"
+                    )
+                    Log.d(
+                        "FeatureMatching",
+                        "${img.id} Cos: ${features.map {
+                            cosineSimilarity(
+                                it,
+                                imgFeature
+                            )
+                        }.joinToString()}"
+                    )
+                }
+            }
+        }
+    }
 }

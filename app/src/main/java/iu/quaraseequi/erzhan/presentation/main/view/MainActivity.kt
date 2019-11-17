@@ -12,6 +12,7 @@ import iu.quaraseequi.erzhan.R
 import iu.quaraseequi.erzhan.domain.entities.images.TargetImage
 import iu.quaraseequi.erzhan.presentation.main.presenter.MainScreenPresenter
 import iu.quaraseequi.erzhan.presentation.main.presenter.MainScreenView
+import iu.quaraseequi.erzhan.tf.CameraActivity
 import iu.quaraseequi.erzhan.tf.DetectorActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_saved_photo.view.*
@@ -43,6 +44,7 @@ class MainActivity : MvpAppCompatActivity(), MainScreenView {
         setContentView(R.layout.activity_main)
 
         btn_add_photo.setOnClickListener { presenter.onAddPhotoClick() }
+        btn_set_alarm_time.setOnClickListener { presenter.onSetAlarmTimeClick() }
 
 
         rv_saved_photos.layoutManager = GridLayoutManager(this, 3)
@@ -56,11 +58,16 @@ class MainActivity : MvpAppCompatActivity(), MainScreenView {
     }
 
     override fun openAddPhotoScreen() {
-        //CameraActivity.start(this)
         startActivity(Intent(this, DetectorActivity::class.java))
     }
 
     override fun showSavedImages(images: List<TargetImage>) {
         imagesAdapter.setItems(images)
+    }
+
+    override fun startAlarm() {
+        Intent(this, DetectorActivity::class.java)
+            .apply { putExtra(CameraActivity.DETECT_SAVED_IMAGE, true) }
+            .let { startActivity(it) }
     }
 }

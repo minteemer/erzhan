@@ -3,6 +3,9 @@ package iu.quaraseequi.erzhan.data.db.models
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.google.gson.reflect.TypeToken
+import iu.quaraseequi.erzhan.data.fromJson
+import iu.quaraseequi.erzhan.data.toJson
 import iu.quaraseequi.erzhan.domain.entities.images.TargetImage
 
 @Entity(tableName = "images")
@@ -20,8 +23,11 @@ data class TargetImageModel(
 
     fun toEntity(): TargetImage = TargetImage(
         id, imagePath,
-        descriptor
+        descriptor.fromJson<List<List<Float>>>(DescriptorTypeToken.type)
+            .map { it.toFloatArray() }
     )
 
-    constructor(image: TargetImage) : this(image.id, image.path, image.descriptor)
+    private object DescriptorTypeToken : TypeToken<List<List<Float>>>()
+
+    constructor(image: TargetImage) : this(image.id, image.path, image.descriptor.toJson())
 }

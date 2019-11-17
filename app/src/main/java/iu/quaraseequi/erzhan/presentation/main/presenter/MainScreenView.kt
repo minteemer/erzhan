@@ -9,4 +9,6 @@ interface MainScreenView : MvpView {
 
     fun showSavedImages(images: List<TargetImage>)
 
+    fun startAlarm()
+
 }

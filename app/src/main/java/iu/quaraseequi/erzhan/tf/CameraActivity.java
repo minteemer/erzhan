@@ -20,7 +20,6 @@ import android.Manifest;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
@@ -30,6 +29,7 @@ import android.media.Image;
 import android.media.Image.Plane;
 import android.media.ImageReader;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -58,13 +58,16 @@ import org.koin.java.KoinJavaComponent;
 
 import java.nio.ByteBuffer;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import iu.quaraseequi.erzhan.R;
-import iu.quaraseequi.erzhan.data.storage.ImageStorage;
 import iu.quaraseequi.erzhan.domain.entities.logger.ErrorLoggerKt;
 import iu.quaraseequi.erzhan.domain.interactors.images.ImagesInteractor;
-import iu.quaraseequi.erzhan.repositories.objectDetection.ObjectDetectionRepository;
+import iu.quaraseequi.erzhan.presentation.base.ContextShortcutsKt;
 import iu.quaraseequi.erzhan.tf.env.ImageUtils;
 import iu.quaraseequi.erzhan.tf.env.Logger;
+import kotlin.Lazy;
 
 public abstract class CameraActivity extends AppCompatActivity
         implements OnImageAvailableListener,
@@ -100,13 +103,20 @@ public abstract class CameraActivity extends AppCompatActivity
     private SwitchCompat apiSwitchCompat;
     private TextView threadsTextView;
 
-    private Boolean takePhoto = false;
+    private boolean takePhoto = false;
+
+    static public final String DETECT_SAVED_IMAGE = "DETECT_SAVED_IMAGE";
+    private boolean detectSavedImage = false;
+
+    private MediaPlayer mp;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         LOGGER.d("onCreate " + this);
         super.onCreate(null);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        detectSavedImage = getIntent().getBooleanExtra(DETECT_SAVED_IMAGE, false);
 
         setContentView(R.layout.activity_camera);
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -129,9 +139,19 @@ public abstract class CameraActivity extends AppCompatActivity
         bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
         takePhotoImageView = findViewById(R.id.iv_take_photo_btn);
 
-        takePhotoImageView.setOnClickListener((v) -> {
-            takePhoto = true;
-        });
+
+        if (detectSavedImage) {
+            takePhotoImageView.setVisibility(View.GONE);
+
+            mp = MediaPlayer.create(this, R.raw.alarm);
+            mp.setLooping(true);
+            mp.start();
+        } else {
+            takePhotoImageView.setVisibility(View.VISIBLE);
+            takePhotoImageView.setOnClickListener((v) -> {
+                takePhoto = true;
+            });
+        }
 
         ViewTreeObserver vto = gestureLayout.getViewTreeObserver();
         vto.addOnGlobalLayoutListener(
@@ -249,6 +269,11 @@ public abstract class CameraActivity extends AppCompatActivity
         processImage();
     }
 
+    private Lazy<ImagesInteractor> imagesInteractor =
+            KoinJavaComponent.inject(ImagesInteractor.class);
+
+
+    private Disposable checkImageDisposable = null;
 
     /**
      * Callback for Camera2 API
@@ -268,22 +293,44 @@ public abstract class CameraActivity extends AppCompatActivity
             if (image == null) {
                 return;
             }
-
             synchronized (this) {
-                if (takePhoto) {
-                    takePhoto = false;
-                    Log.d("Camera", "Frame format: " + image.getFormat());
+                if (detectSavedImage && (checkImageDisposable == null || checkImageDisposable.isDisposed())) {
+                    checkImageDisposable = imagesInteractor.getValue()
+                            .checkImage(image)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe((isSaved) -> {
+                                if (isSaved) {
+                                    ContextShortcutsKt.showShortToast(
+                                            this,
+                                            "Matching image found!"
+                                    );
 
-                    try {
-                        KoinJavaComponent.get(ImagesInteractor.class)
-                                .saveImage(image)
-                                .blockingAwait();
-                    } catch (Exception e){
-                        ErrorLoggerKt.log(e, "CameraActivity", "Image saving error");
-                    } finally {
-                        finish();
-                    }
+                                    if (mp != null){
+                                        mp.release();
+                                        mp = null;
+                                    }
+
+                                    finish();
+                                }
+                            });
                     return;
+                } else {
+                    if (takePhoto) {
+                        takePhoto = false;
+                        Log.d("Camera", "Frame format: " + image.getFormat());
+
+                        try {
+                            imagesInteractor.getValue()
+                                    .saveImage(image)
+                                    .blockingAwait();
+                        } catch (Exception e) {
+                            ErrorLoggerKt.log(e, "CameraActivity", "Image saving error");
+                        } finally {
+                            finish();
+                        }
+                        return;
+                    }
                 }
             }
 
