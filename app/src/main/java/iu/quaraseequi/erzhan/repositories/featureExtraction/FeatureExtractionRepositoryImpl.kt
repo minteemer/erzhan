@@ -16,8 +16,7 @@ class FeatureExtractionRepositoryImpl(
 
     var modelFile = "feature_extraction_model.tflite"
     private val inputSize = 256
-    private val IMAGE_MEAN = 128.0f
-    private val IMAGE_STD = 128.0f
+    private val IMAGE_NORMALIZATION = 255.0f
     private val numBytesPerChannel = 4
 
     val tflite: Interpreter by lazy { Interpreter(loadModelFile(modelFile)) }
@@ -31,19 +30,20 @@ class FeatureExtractionRepositoryImpl(
         return fileChannel.map(READ_ONLY, startOffset, declaredLength)
     }
 
-    override fun getFeatures(bitmap: Bitmap): DoubleArray {
+    override fun getFeatures(bitmap: Bitmap): FloatArray {
         val imgData = ByteBuffer.allocateDirect(1 * inputSize * inputSize * 3 * numBytesPerChannel)
         imgData.order(ByteOrder.nativeOrder())
         val intValues = IntArray(inputSize * inputSize)
         val outputVector = Array(1){Array(4){Array(4){FloatArray(1)} } }
+        bitmap.getPixels(intValues, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
 
         imgData.rewind()
         for (i in 0 until inputSize) {
             for (j in 0 until inputSize) {
                 val pixelValue = intValues[i * inputSize + j]
-                imgData.putFloat(((pixelValue shr 16 and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
-                imgData.putFloat(((pixelValue shr 8 and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
-                imgData.putFloat(((pixelValue and 0xFF) - IMAGE_MEAN) / IMAGE_STD)
+                imgData.putFloat((pixelValue shr 16 and 0xFF) / IMAGE_NORMALIZATION)
+                imgData.putFloat((pixelValue shr 8 and 0xFF) / IMAGE_NORMALIZATION)
+                imgData.putFloat((pixelValue and 0xFF) / IMAGE_NORMALIZATION)
             }
         }
 
@@ -61,7 +61,13 @@ class FeatureExtractionRepositoryImpl(
             }
         )
 
-        return DoubleArray(100) { i -> i.toDouble() }
+        val vec = outputVector.map {
+            it.map {
+                it.map { it.toList()}.flatten()
+            }.flatten()
+        }.flatten()
+
+        return vec.toFloatArray()
     }
 
 }

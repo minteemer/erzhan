@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.RectF
 import android.media.Image
+import android.util.Log
 import iu.quaraseequi.erzhan.tf.env.ImageUtils
 import org.opencv.android.Utils
 import org.opencv.core.Mat
@@ -65,21 +66,22 @@ fun Bitmap.transform(
 }
 
 fun Mat.cropRect(rect: RectF): Mat {
-    val x = width() * rect.left.coerceAtLeast(0f)
-    val y = height() * rect.top.coerceAtLeast(0f)
-    val width = width() * rect.width().coerceAtMost(1f)
-    val height = height() * rect.height().coerceAtMost(1f)
+    val width = width() * rect.width()
+    val height = height() * rect.height()
+    val x = width() * rect.centerX() - width / 2
+    val y = height() * rect.centerY() - height / 2
 
-    // Log.d("Crop", "$rect; x: $x, y: $y, width: $width, height: $height")
-
-    return submat(
-        Rect(
-            x.toInt(),
-            y.toInt(),
-            width.toInt(),
-            height.toInt()
-        )
+    val cropRectX = x.toInt().coerceIn(0..width())
+    val cropRectY = y.toInt().coerceIn(0..height())
+    val cropRect = Rect(
+        cropRectX,
+        cropRectY,
+        width.toInt().coerceIn(0..(width() - cropRectX)),
+        height.toInt().coerceIn(0..(height()- cropRectY))
     )
+    Log.d("Crop", "Detection rect: $rect; crop rect: $cropRect")
+
+    return submat(cropRect)
 }
 
 

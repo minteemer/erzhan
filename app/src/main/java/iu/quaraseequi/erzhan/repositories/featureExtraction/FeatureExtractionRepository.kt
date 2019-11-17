@@ -4,6 +4,6 @@ import android.graphics.Bitmap
 
 interface FeatureExtractionRepository {
 
-    fun getFeatures(bitmap: Bitmap): DoubleArray
+    fun getFeatures(bitmap: Bitmap): FloatArray
 
 }

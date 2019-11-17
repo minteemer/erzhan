@@ -45,16 +45,16 @@ class ImagesInteractor(
             }
             .map { image.cropRect(it.location) }
             .forEachIndexed { i, mat ->
-                val resizeimage = Mat()
+                val resizedImage = Mat()
                 val sz = Size(256.0, 256.0)
-                Imgproc.resize(mat, resizeimage, sz)
+                Imgproc.resize(mat, resizedImage, sz)
                 val bmp = Bitmap.createBitmap(
-                    resizeimage.cols(),
-                    resizeimage.rows(),
-                    Bitmap.Config.ARGB_8888
+                    sz.width.toInt(),
+                    sz.height.toInt(),
+                    Bitmap.Config.RGB_565
                 )
-                Utils.matToBitmap(resizeimage, bmp)
-
+                Utils.matToBitmap(resizedImage, bmp)
+                imageStorageRepository.saveImage(bmp, System.currentTimeMillis())
                 val feature = featureExtractionRepository.getFeatures(bmp)
             }
     }
