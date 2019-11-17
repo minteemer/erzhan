@@ -13,7 +13,6 @@
         android:layout_height="100dp"
         android:scaleType="centerCrop"
         app:layout_constraintStart_toStartOf="parent"
-        android:rotation="90"
         app:layout_constraintTop_toTopOf="parent"
         tools:src="@tools:sample/backgrounds/scenic" />
 

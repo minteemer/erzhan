@@ -1,6 +1,7 @@
 package iu.quaraseequi.erzhan.data
 
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.graphics.RectF
 import android.media.Image
 import android.util.Log
@@ -42,15 +43,44 @@ fun Bitmap.toMat(): Mat =
         Utils.bitmapToMat(copy(Bitmap.Config.ARGB_8888, true), it)
     }
 
+fun Bitmap.transform(
+    rotate: Float = 0f,
+    scaleWidth: Int = width,
+    scaleHeight: Int = height
+): Bitmap {
+    val matrix = Matrix()
+
+    matrix.postRotate(rotate)
+
+    val scaledBitmap = Bitmap.createScaledBitmap(this, scaleWidth, scaleHeight, true)
+
+    return Bitmap.createBitmap(
+        scaledBitmap,
+        0,
+        0,
+        scaledBitmap.width,
+        scaledBitmap.height,
+        matrix,
+        true
+    )
+}
+
 fun Mat.cropRect(rect: RectF): Mat {
-    val x = (width() * (rect.centerX() - rect.width() / 2))
-    val y = height() * (rect.centerY() - rect.height() / 2)
+    val x = width() * rect.left.coerceAtLeast(0f)
+    val y = height() * rect.top.coerceAtLeast(0f)
     val width = width() * rect.width()
     val height = height() * rect.height()
 
     Log.d("Crop", "$rect; x: $x, y: $y, width: $width, height: $height")
 
-    return submat(Rect(x.toInt().coerceAtLeast(0), y.toInt().coerceAtLeast(0), width.toInt(), height.toInt()))
+    return submat(
+        Rect(
+            x.toInt(),
+            y.toInt().coerceAtLeast(0),
+            width.toInt(),
+            height.toInt()
+        )
+    )
 }
 
 

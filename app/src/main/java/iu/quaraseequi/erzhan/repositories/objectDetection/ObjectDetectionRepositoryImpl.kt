@@ -20,7 +20,7 @@ class ObjectDetectionRepositoryImpl(
             ImageUtils.getTransformationMatrix(
                 image.width, image.height,
                 CROP_SIZE, CROP_SIZE,
-                90, false
+                0, false
             )
         }
 
