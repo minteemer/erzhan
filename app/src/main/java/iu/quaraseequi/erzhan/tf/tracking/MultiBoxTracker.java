@@ -27,6 +27,7 @@ import android.graphics.RectF;
 import android.text.TextUtils;
 import android.util.Pair;
 import android.util.TypedValue;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -113,7 +114,7 @@ public class MultiBoxTracker {
   }
 
   public synchronized void trackResults(final List<Classifier.Recognition> results, final long timestamp) {
-    logger.i("Processing %d results from %d", results.size(), timestamp);
+    // logger.i("Processing %d results from %d", results.size(), timestamp);
     processResults(results);
   }
 

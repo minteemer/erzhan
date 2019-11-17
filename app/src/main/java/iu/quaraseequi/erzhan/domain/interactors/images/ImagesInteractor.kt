@@ -54,7 +54,6 @@ class ImagesInteractor(
                     Bitmap.Config.ARGB_8888
                 )
                 Utils.matToBitmap(resizeimage, bmp)
-                imageStorageRepository.saveImage(bmp, System.currentTimeMillis())
 
                 val feature = featureExtractionRepository.getFeatures(bmp)
             }

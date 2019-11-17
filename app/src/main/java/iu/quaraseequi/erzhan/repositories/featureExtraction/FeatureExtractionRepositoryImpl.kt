@@ -35,7 +35,7 @@ class FeatureExtractionRepositoryImpl(
         val imgData = ByteBuffer.allocateDirect(1 * inputSize * inputSize * 3 * numBytesPerChannel)
         imgData.order(ByteOrder.nativeOrder())
         val intValues = IntArray(inputSize * inputSize)
-        val outputVector = Array(1){Array(2){Array(2){FloatArray(1)} } }
+        val outputVector = Array(1){Array(4){Array(4){FloatArray(1)} } }
 
         imgData.rewind()
         for (i in 0 until inputSize) {
