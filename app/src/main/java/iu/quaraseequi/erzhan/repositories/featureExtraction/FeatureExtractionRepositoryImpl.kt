@@ -14,33 +14,36 @@ class FeatureExtractionRepositoryImpl(
     private val assetsManager: AssetManager
 ) : FeatureExtractionRepository {
 
-    var modelFile = "feature_extraction_model.tflite"
-    private val inputSize = 256
-    private val IMAGE_NORMALIZATION = 255.0f
-    private val numBytesPerChannel = 4
-
-    val tflite: Interpreter by lazy { Interpreter(loadModelFile(modelFile)) }
-
-    private fun loadModelFile(MODEL_FILE: String): ByteBuffer {
-        val fileDescriptor = assetsManager.openFd(MODEL_FILE)
-        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
-        val fileChannel = inputStream.channel
-        val startOffset = fileDescriptor.startOffset
-        val declaredLength = fileDescriptor.declaredLength
-        return fileChannel.map(READ_ONLY, startOffset, declaredLength)
+    companion object {
+        private const val MODEL_FILE = "feature_extraction_model.tflite"
+        private const val INPUT_SIZE = 256
+        private const val IMAGE_NORMALIZATION = 255.0f
+        private const val NUM_BYTES_PER_CHANNEL = 4
     }
 
+    val tflite: Interpreter by lazy {
+        val fileDescriptor = assetsManager.openFd(MODEL_FILE)
+        FileInputStream(fileDescriptor.fileDescriptor).channel
+            .map(READ_ONLY, fileDescriptor.startOffset, fileDescriptor.declaredLength)
+            .let {
+                @Suppress("DEPRECATION")
+                Interpreter(it)
+            }
+    }
+
+
     override fun getFeatures(bitmap: Bitmap): FloatArray {
-        val imgData = ByteBuffer.allocateDirect(1 * inputSize * inputSize * 3 * numBytesPerChannel)
+        val imgData =
+            ByteBuffer.allocateDirect(1 * INPUT_SIZE * INPUT_SIZE * 3 * NUM_BYTES_PER_CHANNEL)
         imgData.order(ByteOrder.nativeOrder())
-        val intValues = IntArray(inputSize * inputSize)
-        val outputVector = Array(1){Array(4){Array(4){FloatArray(1)} } }
+        val intValues = IntArray(INPUT_SIZE * INPUT_SIZE)
+        val outputVector = Array(1) { Array(4) { Array(4) { FloatArray(1) } } }
         bitmap.getPixels(intValues, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
 
         imgData.rewind()
-        for (i in 0 until inputSize) {
-            for (j in 0 until inputSize) {
-                val pixelValue = intValues[i * inputSize + j]
+        for (i in 0 until INPUT_SIZE) {
+            for (j in 0 until INPUT_SIZE) {
+                val pixelValue = intValues[i * INPUT_SIZE + j]
                 imgData.putFloat((pixelValue shr 16 and 0xFF) / IMAGE_NORMALIZATION)
                 imgData.putFloat((pixelValue shr 8 and 0xFF) / IMAGE_NORMALIZATION)
                 imgData.putFloat((pixelValue and 0xFF) / IMAGE_NORMALIZATION)
@@ -48,25 +51,10 @@ class FeatureExtractionRepositoryImpl(
         }
 
         tflite.run(imgData, outputVector)
-        Log.d(
-            "Tflite",
-            outputVector.joinToString (prefix = "[", postfix = "]"){
-                it.joinToString(prefix = "[", postfix = "]") {
-                    it.joinToString(prefix = "[", postfix = "]") {
-                        it.joinToString(prefix = "[", postfix = "]") {
-                            it.toString()
-                        }
-                    }
-                }
-            }
-        )
 
-        val vec = outputVector.map {
-            it.map {
-                it.map { it.toList()}.flatten()
-            }.flatten()
-        }.flatten()
+        val vec = outputVector.map { it.map { it.map { it.toList() }.flatten() }.flatten() }.flatten()
 
+        Log.d("FeatureExtractor", "Extracted vec: $vec")
         return vec.toFloatArray()
     }
 

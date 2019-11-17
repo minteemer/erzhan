@@ -1,18 +1,33 @@
 package iu.quaraseequi.erzhan.repositories.objectDetection
 
+import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.RectF
 import iu.quaraseequi.erzhan.tf.env.ImageUtils
 import iu.quaraseequi.erzhan.tf.tflite.Classifier
+import iu.quaraseequi.erzhan.tf.tflite.TFLiteObjectDetectionAPIModel
 
 class ObjectDetectionRepositoryImpl(
-    private val detector: Classifier
+    assetManager: AssetManager
 ) : ObjectDetectionRepository {
 
     companion object {
-        const val CROP_SIZE = 300
+        private const val CROP_SIZE = 300
+        private const val MODEL_FILE = "detect.tflite"
+        private const val LABEL_MAP_FILE = "file:///android_asset/labelmap.txt"
+
+    }
+
+    private val detector: Classifier by lazy {
+        TFLiteObjectDetectionAPIModel.create(
+            assetManager,
+            MODEL_FILE,
+            LABEL_MAP_FILE,
+            CROP_SIZE,
+            true
+        )
     }
 
     override fun detectObjects(image: Bitmap): List<Classifier.Recognition> {
