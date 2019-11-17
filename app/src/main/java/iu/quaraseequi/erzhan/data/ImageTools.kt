@@ -10,6 +10,7 @@ import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.core.Rect
 
+
 fun Image.YUItoRGBBitmap(): Bitmap {
     val planes = planes
 
@@ -42,6 +43,14 @@ fun Bitmap.toMat(): Mat =
     Mat().also {
         Utils.bitmapToMat(copy(Bitmap.Config.ARGB_8888, true), it)
     }
+
+fun Mat.toBitmap(): Bitmap = Bitmap.createBitmap(
+    cols(), rows(),
+    Bitmap.Config.ARGB_8888
+).also {
+    Utils.matToBitmap(this, it)
+}
+
 
 fun Bitmap.transform(
     rotate: Float = 0f,
@@ -77,7 +86,7 @@ fun Mat.cropRect(rect: RectF): Mat {
         cropRectX,
         cropRectY,
         width.toInt().coerceIn(0..(width() - cropRectX)),
-        height.toInt().coerceIn(0..(height()- cropRectY))
+        height.toInt().coerceIn(0..(height() - cropRectY))
     )
     Log.d("Crop", "Detection rect: $rect; crop rect: $cropRect")
 

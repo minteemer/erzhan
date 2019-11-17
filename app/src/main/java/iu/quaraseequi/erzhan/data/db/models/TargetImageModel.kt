@@ -23,11 +23,10 @@ data class TargetImageModel(
 
     fun toEntity(): TargetImage = TargetImage(
         id, imagePath,
-        descriptor.fromJson<List<List<Float>>>(DescriptorTypeToken.type)
-            .map { it.toFloatArray() }
+        descriptor.fromJson<List<Float>>(DescriptorTypeToken.type).toFloatArray()
     )
 
-    private object DescriptorTypeToken : TypeToken<List<List<Float>>>()
+    private object DescriptorTypeToken : TypeToken<List<Float>>()
 
     constructor(image: TargetImage) : this(image.id, image.path, image.descriptor.toJson())
 }

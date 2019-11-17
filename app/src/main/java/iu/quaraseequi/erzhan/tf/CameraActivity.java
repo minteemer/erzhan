@@ -142,10 +142,6 @@ public abstract class CameraActivity extends AppCompatActivity
 
         if (detectSavedImage) {
             takePhotoImageView.setVisibility(View.GONE);
-
-            mp = MediaPlayer.create(this, R.raw.alarm);
-            mp.setLooping(true);
-            mp.start();
         } else {
             takePhotoImageView.setVisibility(View.VISIBLE);
             takePhotoImageView.setOnClickListener((v) -> {
@@ -275,6 +271,8 @@ public abstract class CameraActivity extends AppCompatActivity
 
     private Disposable checkImageDisposable = null;
 
+    private boolean taskIsDone = false;
+
     /**
      * Callback for Camera2 API
      */
@@ -294,6 +292,11 @@ public abstract class CameraActivity extends AppCompatActivity
                 return;
             }
             synchronized (this) {
+                if(taskIsDone){
+                    image.close();
+                    return;
+                }
+
                 if (detectSavedImage && (checkImageDisposable == null || checkImageDisposable.isDisposed())) {
                     checkImageDisposable = imagesInteractor.getValue()
                             .checkImage(image)
@@ -301,15 +304,12 @@ public abstract class CameraActivity extends AppCompatActivity
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe((isSaved) -> {
                                 if (isSaved) {
+                                    taskIsDone = true;
+
                                     ContextShortcutsKt.showShortToast(
                                             this,
                                             "Matching image found!"
                                     );
-
-                                    if (mp != null){
-                                        mp.release();
-                                        mp = null;
-                                    }
 
                                     finish();
                                 }
@@ -318,6 +318,7 @@ public abstract class CameraActivity extends AppCompatActivity
                 } else {
                     if (takePhoto) {
                         takePhoto = false;
+                        taskIsDone = true;
                         Log.d("Camera", "Frame format: " + image.getFormat());
 
                         try {
@@ -382,6 +383,20 @@ public abstract class CameraActivity extends AppCompatActivity
         Trace.endSection();
     }
 
+    private void startAlarm(){
+        stopAlarm();
+        mp = MediaPlayer.create(this, R.raw.alarm);
+        mp.setLooping(true);
+        mp.start();
+    }
+
+    private void stopAlarm(){
+        if (mp != null){
+            mp.release();
+            mp = null;
+        }
+    };
+
     @Override
     public synchronized void onStart() {
         LOGGER.d("onStart " + this);
@@ -396,10 +411,17 @@ public abstract class CameraActivity extends AppCompatActivity
         handlerThread = new HandlerThread("inference");
         handlerThread.start();
         handler = new Handler(handlerThread.getLooper());
+
+        if (detectSavedImage){
+            startAlarm();
+        }
     }
 
     @Override
     public synchronized void onPause() {
+        if (detectSavedImage){
+            stopAlarm();
+        }
         LOGGER.d("onPause " + this);
 
         handlerThread.quitSafely();
