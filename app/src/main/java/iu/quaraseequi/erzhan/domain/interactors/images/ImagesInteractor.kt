@@ -13,6 +13,9 @@ import iu.quaraseequi.erzhan.repositories.featureExtraction.FeatureExtractionRep
 import iu.quaraseequi.erzhan.repositories.imageSrorage.ImageStorageRepository
 import iu.quaraseequi.erzhan.repositories.objectDetection.ObjectDetectionRepository
 import org.opencv.android.Utils
+import org.opencv.imgproc.Imgproc
+import org.opencv.core.Mat
+import org.opencv.core.Size
 
 
 class ImagesInteractor(
@@ -41,11 +44,14 @@ class ImagesInteractor(
             }
             .map { image.cropRect(it.location) }
             .forEachIndexed { i, mat ->
-                val bmp = Bitmap.createBitmap(mat.cols(), mat.rows(), Bitmap.Config.ARGB_8888)
-                Utils.matToBitmap(mat, bmp)
+                val resizeimage = Mat()
+                val sz = Size(256.0, 256.0)
+                Imgproc.resize(mat, resizeimage, sz)
+                val bmp = Bitmap.createBitmap(resizeimage.cols(), resizeimage.rows(), Bitmap.Config.ARGB_8888)
+                Utils.matToBitmap(resizeimage, bmp)
                 imageStorageRepository.saveImage(bmp, System.currentTimeMillis())
 
-                val feature = featureExtractionRepository.getFeatures(mat)
+                val feature = featureExtractionRepository.getFeatures(bmp)
             }
     }
 
