@@ -1,19 +1,13 @@
 package iu.quaraseequi.erzhan.data.storage
 
 import android.content.Context
-import android.media.Image
+import android.graphics.Bitmap
 import android.os.Environment
+import io.reactivex.Completable
+import io.reactivex.Single
+import iu.quaraseequi.erzhan.domain.entities.logger.log
 import java.io.File
 import java.io.FileOutputStream
-import java.lang.IllegalStateException
-import android.R.attr.left
-import android.R.attr.top
-import android.graphics.Bitmap
-import android.graphics.ImageFormat
-import android.graphics.Rect
-import android.graphics.YuvImage
-import iu.quaraseequi.erzhan.domain.entities.logger.log
-import java.io.ByteArrayOutputStream
 
 
 class ImageStorage(
@@ -38,7 +32,7 @@ class ImageStorage(
      * @param file File where image is going to be written
      * @return File object pointing to the file URI, null if the file already exists
      */
-    fun saveImage(bitmap: Bitmap, imageName: String) {
+    fun saveImage(bitmap: Bitmap, imageName: String): Single<File> = Single.fromCallable {
         val file = File(albumDir, "$imageName$IMG_EXTENSION")
 
         if (file.exists())
@@ -51,6 +45,8 @@ class ImageStorage(
         } catch (e: Exception) {
             e.log("ImageStorage")
         }
+
+        file
     }
 
 
@@ -59,7 +55,8 @@ class ImageStorage(
             ?.map { it.absolutePath }
             ?: emptyList()
 
-    fun removeImage(imageName: String) {
-        File(albumDir,"$imageName$IMG_EXTENSION").delete()
+    fun removeImage(imageName: String): Completable = Completable.fromCallable {
+        File(albumDir, "$imageName$IMG_EXTENSION").delete()
     }
+
 }

@@ -1,5 +1,6 @@
 package iu.quaraseequi.erzhan.di
 
+import iu.quaraseequi.erzhan.data.db.ErzhanDatabase
 import iu.quaraseequi.erzhan.data.storage.ImageStorage
 import iu.quaraseequi.erzhan.domain.interactors.images.ImagesInteractor
 import iu.quaraseequi.erzhan.repositories.featureExtraction.FeatureExtractionRepository
@@ -17,8 +18,12 @@ val appModule = module {
     /** Data */
     single { ImageStorage(androidContext()) }
 
+    /** DB */
+    single { ErzhanDatabase.createInstance(androidContext()) }
+    single { get<ErzhanDatabase>().imagesDao() }
+
     /** Repositories */
-    single<ImageStorageRepository> { ImageStorageRepositoryImpl(get()) }
+    single<ImageStorageRepository> { ImageStorageRepositoryImpl(get(), get()) }
     single<ObjectDetectionRepository> { ObjectDetectionRepositoryImpl(get()) }
     single<FeatureExtractionRepository> { FeatureExtractionRepositoryImpl(androidContext().assets) }
 

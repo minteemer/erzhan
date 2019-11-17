@@ -28,15 +28,11 @@ class ImagesInteractor(
     fun getSavedImages(): Single<List<TargetImage>> = imageStorageRepository.getSavedImages()
 
 
-    fun saveImage(cameraImage: Image): Completable = Completable.fromAction {
-        val imageId = System.currentTimeMillis()
+    fun saveImage(cameraImage: Image): Completable = Completable.defer {
         val rgbBitmap = cameraImage.YUItoRGBBitmap().transform(rotate = 90f)
 
-        imageStorageRepository.saveImage(rgbBitmap, imageId)
-
         val image = rgbBitmap.toMat()
-
-        objectDetectionRepository.detectObjects(rgbBitmap).asSequence()
+        val features = objectDetectionRepository.detectObjects(rgbBitmap).asSequence()
             .filter { it.confidence >= 0.5 }
             .also { recognitions ->
                 recognitions.forEach {
@@ -44,19 +40,22 @@ class ImagesInteractor(
                 }
             }
             .map { image.cropRect(it.location) }
-            .forEachIndexed { i, mat ->
-                val resizeimage = Mat()
-                val sz = Size(256.0, 256.0)
-                Imgproc.resize(mat, resizeimage, sz)
+            .map { objectMat ->
+                val resizedImage = Mat().also{
+                    Imgproc.resize(objectMat, it, Size(256.0, 256.0))
+                }
                 val bmp = Bitmap.createBitmap(
-                    resizeimage.cols(),
-                    resizeimage.rows(),
+                    resizedImage.cols(),
+                    resizedImage.rows(),
                     Bitmap.Config.ARGB_8888
                 )
-                Utils.matToBitmap(resizeimage, bmp)
+                Utils.matToBitmap(resizedImage, bmp)
 
-                val feature = featureExtractionRepository.getFeatures(bmp)
+                featureExtractionRepository.getFeatures(bmp)
             }
+            .toList()
+
+        imageStorageRepository.saveImage(rgbBitmap, features)
     }
 
     fun removeImage(imageId: Long) = imageStorageRepository.removeImage(imageId)

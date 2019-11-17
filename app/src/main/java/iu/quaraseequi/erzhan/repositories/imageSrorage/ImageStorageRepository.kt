@@ -8,7 +8,7 @@ import iu.quaraseequi.erzhan.domain.entities.images.TargetImage
 interface ImageStorageRepository {
     fun getSavedImages(): Single<List<TargetImage>>
 
-    fun saveImage(image: Bitmap, imageId: Long)
+    fun saveImage(image: Bitmap, features: List<DoubleArray>): Completable
 
     fun removeImage(imageId: Long): Completable
 }
