@@ -1,9 +1,9 @@
 package iu.quaraseequi.erzhan.repositories.featureExtraction
 
-import android.graphics.Bitmap
+import org.opencv.core.Mat
 
 interface FeatureExtractionRepository {
 
-    fun getFeatures(bitmap: Bitmap): FloatArray
+    fun getFeatures(image: Mat): FloatArray
 
 }

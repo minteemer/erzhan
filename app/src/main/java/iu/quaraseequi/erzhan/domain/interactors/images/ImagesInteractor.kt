@@ -70,17 +70,7 @@ class ImagesInteractor(
             }
             .map { image.cropRect(it.location) }
             .map { objectMat ->
-                val resizedImage = Mat().also {
-                    Imgproc.resize(objectMat, it, Size(256.0, 256.0))
-                }
-                val bmp = Bitmap.createBitmap(
-                    resizedImage.cols(),
-                    resizedImage.rows(),
-                    Bitmap.Config.ARGB_8888
-                )
-                Utils.matToBitmap(resizedImage, bmp)
-
-                objectMat.toBitmap() to featureExtractionRepository.getFeatures(bmp)
+                objectMat.toBitmap() to featureExtractionRepository.getFeatures(objectMat)
             }
             .toList()
     }

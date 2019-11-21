@@ -3,6 +3,10 @@ package iu.quaraseequi.erzhan.repositories.featureExtraction
 import android.content.res.AssetManager
 import android.graphics.Bitmap
 import android.util.Log
+import org.opencv.android.Utils
+import org.opencv.core.Mat
+import org.opencv.core.Size
+import org.opencv.imgproc.Imgproc
 import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.nio.ByteBuffer
@@ -27,12 +31,14 @@ class FeatureExtractionRepositoryImpl(
             .map(READ_ONLY, fileDescriptor.startOffset, fileDescriptor.declaredLength)
             .let {
                 @Suppress("DEPRECATION")
-                Interpreter(it)
+                    Interpreter(it)
             }
     }
 
 
-    override fun getFeatures(bitmap: Bitmap): FloatArray {
+    override fun getFeatures(image: Mat): FloatArray {
+        val bitmap = preProcessImage(image)
+
         val imgData =
             ByteBuffer.allocateDirect(1 * INPUT_SIZE * INPUT_SIZE * 3 * NUM_BYTES_PER_CHANNEL)
         imgData.order(ByteOrder.nativeOrder())
@@ -52,10 +58,24 @@ class FeatureExtractionRepositoryImpl(
 
         tflite.run(imgData, outputVector)
 
-        val vec = outputVector.map { it.map { it.map { it.toList() }.flatten() }.flatten() }.flatten()
+        val vec =
+            outputVector.map { it.map { it.map { it.toList() }.flatten() }.flatten() }.flatten()
 
         Log.d("FeatureExtractor", "Extracted vec: $vec")
         return vec.toFloatArray()
+    }
+
+    private fun preProcessImage(image: Mat): Bitmap {
+        val resizedImage = Mat().also {
+            Imgproc.resize(image, it, Size(256.0, 256.0))
+        }
+        val bmp = Bitmap.createBitmap(
+            resizedImage.cols(),
+            resizedImage.rows(),
+            Bitmap.Config.ARGB_8888
+        )
+        Utils.matToBitmap(resizedImage, bmp)
+        return bmp
     }
 
 }
